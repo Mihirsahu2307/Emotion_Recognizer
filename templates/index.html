@@ -62,10 +62,9 @@
             color: #5b1f50;
         }
 
-        #video {
-            transform: rotateY(180deg);
-            -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-            -moz-transform:rotateY(180deg); /* Firefox */
+        #videoElement {
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
         }
 
         #canvas {
@@ -81,7 +80,7 @@
     
      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
      <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.0/socket.io.js'></script>
-     <!-- <link rel="stylesheet" type= "text/css" href="{{ url_for('static', filename='css/main.css') }}"> -->
+     <!-- <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/mainpage.css') }}"> -->
 </head>
 
 <body>
@@ -104,13 +103,28 @@
     </div>
 
     <div class = "input-form">
-        <form method="post" action="{{ url_for('user_input') }}">
-        <input type="submit" value="Detect Emotion On/Off" name="detect_emotion" id = "toggleBtn"/>
+        <form method="post" id = "my-form">
+            <input type="submit" value="Detect Emotion On/Off" name="detect_emotion" id = "toggleBtn"/>
         </form>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+    <!-- <script type="text/javascript">
+        $(document).on('submit','#my-form',function(e)
+                       {
+          console.log('hello');
+          e.preventDefault();
+          $.ajax({
+            type:'POST',
+            url:'/requests',
+            success:function()
+            {
+              alert('saved');
+            }
+          })
+        });
+      </script> -->
  </body>
 
 </html>

@@ -6,45 +6,20 @@ from PIL import Image
 import base64,cv2
 import numpy as np
 from engineio.payload import Payload
-import keras.utils
-import os
-
 # from prediction_model import *
 # from Scheduler import *
+import keras.utils
 
 Payload.max_decode_packets = 2048
-TEMPLATE_DIR = os.path.abspath('./templates')
-STATIC_DIR = os.path.abspath('./static')
 
-app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
+app = Flask(__name__, template_folder='./templates')
 socketio = SocketIO(app,cors_allowed_origins='*' , logger = False)
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-@app.route('/', methods=['POST', 'GET'])
-def index():
-    return render_template('index.html')
 
-
-def readb64(base64_string):
-    idx = base64_string.find('base64,')
-    base64_string  = base64_string[idx+7:]
-    sbuf = io.BytesIO()
-    sbuf.write(base64.b64decode(base64_string, ' /'))
-    pimg = Image.open(sbuf)
-    return cv2.cvtColor(np.array(pimg), cv2.COLOR_RGB2BGR)
-
-def moving_average(x):
-    return np.mean(x)
-
-
-@socketio.on('catch-frame')
-def catch_frame(data):
-    emit('response_back', data)  
-
-
-global fps, prev_recv_time, cnt, fps_array, face_roi, emotion_detect, fd_model, status, counter
+global fps, prev_recv_time, face_roi, emotion_detect, fd_model, status, counter
 
 counter = 0
 modelFile = "saved_model/res10_300x300_ssd_iter_140000.caffemodel"
@@ -52,8 +27,6 @@ configFile = "saved_model/deploy.prototxt.txt"
 fd_model = cv2.dnn.readNetFromCaffe(configFile, modelFile)
 fps=5
 prev_recv_time = 0
-cnt=0
-fps_array=[0]
 emotion_detect = 0
 face_roi = np.zeros((3, 3, 3))
 status = 'neutral'
@@ -79,7 +52,6 @@ def predict():
     
     max_index = np.argmax(predictions[0])
     status = classes[max_index]
-    return status
 
 
 # # Original prediction model
@@ -91,11 +63,6 @@ def predict():
     
 #     img_size = 224
 #     classes = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
-    
-#     # if save_images:
-#     #     cv2.imwrite(os.path.join(images, 'face_' + str(counter) + '.png'), face_roi)
-#     #     counter += 1
-
 #     try:
 #         final_image = cv2.resize(face_roi, (img_size, img_size))
 #         final_image = np.expand_dims(final_image, axis = 0)
@@ -139,17 +106,23 @@ def detect_face(frame):
 
 # rt = Scheduler(0.5, predict_emotion, 0) # Call predict every x seconds
 
-@socketio.on('image')
-def image(data_image):
-    global fps,cnt, prev_recv_time,fps_array, counter, status
-    recv_time = time.time()
-    frame = (readb64(data_image))
-    # cv2.imwrite('recv_image' + str(counter) + '.jpeg', frame)
+@app.route('/webcam', methods = ['POST'])
+def process_image():
+    global prev_recv_time, fps_array, counter, status
+    
+    # recv_time = time.time()
+    # client to server via xmlhttp
+    image = request.files['image']
+    
+    img = Image.open(image)
+    img = np.array(img)
+    frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
     
     frame = cv2.flip(frame,1)
     frame, x, y = detect_face(frame)
     if counter == 4:
-        if(emotion_detect and x > -1 and y > -1):  
+        if(emotion_detect and x > -1 and y > -1):
+            # predict_emotion()  
             predict()
         counter = 0
     else:
@@ -159,37 +132,35 @@ def image(data_image):
     if emotion_detect:
         cv2.putText(frame, status, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
     
-    imgencode = cv2.imencode('.jpeg', frame,[cv2.IMWRITE_JPEG_QUALITY,40])[1]
-    
-    # base64 encode
+    # server to js via socketio
+    imgencode = cv2.imencode('.jpeg', frame, [cv2.IMWRITE_JPEG_QUALITY,40])[1]
     stringData = base64.b64encode(imgencode).decode('utf-8')
     b64_src = 'data:image/jpeg;base64,'
     stringData = b64_src + stringData
+    socketio.emit('response_back', stringData)
+    
+    # try:
+    #     fps = 1/(recv_time - prev_recv_time)
+    # except ZeroDivisionError as e:
+    #     pass
+    # prev_recv_time = recv_time
+    # print(int(fps))
+    
+    return render_template('index.html')
+    
 
-    # emit the frame back
-    emit('response_back', stringData)
-    try:
-        fps = 1/(recv_time - prev_recv_time)
-    except ZeroDivisionError as e:
-        pass
-    fps_array.append(fps)
-    fps = round(moving_average(np.array(fps_array)),1)
-    prev_recv_time = recv_time
-    # print(fps)
-    #print(fps_array)
-    cnt+=1
-    if cnt==30:
-        fps_array=[fps]
-        cnt=0
-
-
-@app.route('/requests',methods=['POST','GET'])
+@app.route('/requests',methods=['POST'])
 def user_input():
     if request.method == 'POST':
-        if request.form.get('detect_emotion') == 'Detect Emotion On/Off':
-            global emotion_detect
-            emotion_detect =not emotion_detect
+        # print("here")
+        global emotion_detect
+        emotion_detect =not emotion_detect
+        # if request.form.get('detect_emotion') == 'Detect Emotion On/Off':
             
+    return render_template('index.html')
+
+@app.route('/', methods=['POST', 'GET'])
+def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
