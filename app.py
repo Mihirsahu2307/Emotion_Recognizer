@@ -11,9 +11,9 @@ Payload.max_decode_packets = 2048
 app = Flask(__name__, template_folder='./templates')
 socketio = SocketIO(app,cors_allowed_origins='*' , logger = False)
 
-import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+# import logging
+# log = logging.getLogger('werkzeug')
+# log.setLevel(logging.ERROR)
 
 
 global fps, prev_recv_time, face_roi, emotion_detect, fd_model, status, counter
@@ -30,7 +30,7 @@ status = 'neutral'
 
 from keras.models import model_from_json
 model = model_from_json(open("ml_model/facial_expression_model_structure.json", "r").read())
-model.load_weights('ml_model/facial_expression_model_weights.h5') #load weights
+model.load_weights('ml_model/facial_expression_model_weights.h5')
 
 @socketio.on('connect')
 def test_connect():
@@ -142,4 +142,4 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    socketio.run(app,port=9990 ,debug=True)
+    socketio.run(app,port=5000 ,debug=True)
