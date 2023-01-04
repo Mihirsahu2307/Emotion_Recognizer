@@ -1,19 +1,16 @@
-from flask import Flask, render_template, request, Response
-from flask_socketio import SocketIO, emit
-import time
-import io
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO
 from PIL import Image
 import base64,cv2
 import numpy as np
 from engineio.payload import Payload
-# from prediction_model import *
-# from Scheduler import *
 import keras.utils
 
 Payload.max_decode_packets = 2048
 
 app = Flask(__name__, template_folder='./templates')
 socketio = SocketIO(app,cors_allowed_origins='*' , logger = False)
+
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -31,11 +28,13 @@ emotion_detect = 0
 face_roi = np.zeros((3, 3, 3))
 status = 'neutral'
 
-#face expression recognizer initialization
 from keras.models import model_from_json
 model = model_from_json(open("ml_model/facial_expression_model_structure.json", "r").read())
 model.load_weights('ml_model/facial_expression_model_weights.h5') #load weights
 
+@socketio.on('connect')
+def test_connect():
+    print("socket connected")
 
 # Using a different prediction model in this method
 def predict():
@@ -52,30 +51,7 @@ def predict():
     
     max_index = np.argmax(predictions[0])
     status = classes[max_index]
-
-
-# # Original prediction model
-# def predict_emotion(save_images = 0):
-#     global status, face_roi, emotion_detect, counter
     
-#     if not emotion_detect:
-#         return
-    
-#     img_size = 224
-#     classes = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
-#     try:
-#         final_image = cv2.resize(face_roi, (img_size, img_size))
-#         final_image = np.expand_dims(final_image, axis = 0)
-            
-#         Predictions = model6.predict(final_image)
-#         class_num = np.argmax(Predictions)   # **Provides the index of the max argument
-        
-#         status = classes[class_num]
-#     except:
-#         pass
-    
-#     print("Emotion: ", status)
-
 def detect_face(frame):
     global fd_model, face_roi
     
@@ -119,18 +95,22 @@ def process_image():
     frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
     
     frame = cv2.flip(frame,1)
-    frame, x, y = detect_face(frame)
-    if counter == 4:
-        if(emotion_detect and x > -1 and y > -1):
-            # predict_emotion()  
-            predict()
-        counter = 0
-    else:
+    try:
+        frame, x, y = detect_face(frame)
+        if counter == 4:
+            if(emotion_detect and x > -1 and y > -1):
+                # predict_emotion()  
+                predict()
+            counter = 0
+        else:
+            pass
+        counter += 1
+        
+        if emotion_detect:
+            cv2.putText(frame, status, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    except:
         pass
-    counter += 1
     
-    if emotion_detect:
-        cv2.putText(frame, status, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
     
     # server to js via socketio
     imgencode = cv2.imencode('.jpeg', frame, [cv2.IMWRITE_JPEG_QUALITY,40])[1]
@@ -152,10 +132,8 @@ def process_image():
 @app.route('/requests',methods=['POST'])
 def user_input():
     if request.method == 'POST':
-        # print("here")
         global emotion_detect
         emotion_detect =not emotion_detect
-        # if request.form.get('detect_emotion') == 'Detect Emotion On/Off':
             
     return render_template('index.html')
 

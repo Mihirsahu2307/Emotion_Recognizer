@@ -33,7 +33,7 @@ $(document).ready(function(){
         });
     }
 
-    const FPS = 10;
+    const FPS = 5;
     setInterval(() => {
         width=video.width;
         height=video.height;
