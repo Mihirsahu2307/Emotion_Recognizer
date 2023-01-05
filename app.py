@@ -10,6 +10,8 @@ Payload.max_decode_packets = 2048
 
 app = Flask(__name__, template_folder='./templates')
 socketio = SocketIO(app, cors_allowed_origins='*', logger = True, engineio_logger = True)
+# socketio = SocketIO(app, cors_allowed_origins='*')
+
 
 # import logging
 # log = logging.getLogger('werkzeug')

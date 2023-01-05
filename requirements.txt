@@ -1,5 +1,5 @@
 flask
-flask-socketio
+flask-socketio==5.2.0
 gast
 h5py
 jinja2
@@ -8,8 +8,8 @@ libclang
 numpy
 opencv-python
 pillow
-python-engineio
-python-socketio
+python-engineio==4.3.4
+python-socketio==5.7.2
 requests
 tensorflow
 urllib3
