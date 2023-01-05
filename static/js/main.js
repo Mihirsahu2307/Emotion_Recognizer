@@ -34,7 +34,7 @@ $(document).ready(function(){
         });
     }
 
-    const FPS = 5;
+    const FPS = 0.1;
     setInterval(() => {
         width=video.width;
         height=video.height;
@@ -56,6 +56,7 @@ $(document).ready(function(){
 
 
     socket.on('response_back', function(image){
+            console.log('You got me!')
             photo.setAttribute('src', image );
     });
 });
