@@ -4,25 +4,28 @@ from PIL import Image
 import base64,cv2
 import numpy as np
 from engineio.payload import Payload
-import keras.utils
+from prediction_model import *
 
 Payload.max_decode_packets = 2048
 
+
+# Bug that took me forever to debug during deployment: Client and server side socketio versions should be compatible
+
 app = Flask(__name__, template_folder='./templates')
-socketio = SocketIO(app, cors_allowed_origins='*', logger = True, engineio_logger = True)
-# socketio = SocketIO(app, cors_allowed_origins='*')
+# socketio = SocketIO(app, cors_allowed_origins='*', logger = True, engineio_logger = True)
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 
-# import logging
-# log = logging.getLogger('werkzeug')
-# log.setLevel(logging.ERROR)
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 
 global fps, prev_recv_time, face_roi, emotion_detect, fd_model, status, counter
 
 counter = 0
-modelFile = "saved_model/res10_300x300_ssd_iter_140000.caffemodel"
-configFile = "saved_model/deploy.prototxt.txt"
+modelFile = "face_detection_model/res10_300x300_ssd_iter_140000.caffemodel"
+configFile = "face_detection_model/deploy.prototxt.txt"
 fd_model = cv2.dnn.readNetFromCaffe(configFile, modelFile)
 fps=5
 prev_recv_time = 0
@@ -30,30 +33,32 @@ emotion_detect = 0
 face_roi = np.zeros((3, 3, 3))
 status = 'neutral'
 
-from keras.models import model_from_json
-model = model_from_json(open("ml_model/facial_expression_model_structure.json", "r").read())
-model.load_weights('ml_model/facial_expression_model_weights.h5')
-
 @socketio.on('connect')
 def test_connect():
     print("socket connected")
-
-# Using a different prediction model in this method
+    
+    
 def predict():
-    global face_roi, status
+    global status, face_roi, emotion_detect
+    
+    if not emotion_detect:
+        return
+    
+    img_size = 224
     classes = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
-    face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY) #transform to gray scale
-    face_roi = cv2.resize(face_roi, (48, 48)) #resize to 48x48
-    img_pixels = keras.utils.img_to_array(face_roi)
-    img_pixels = np.expand_dims(img_pixels, axis = 0)
+
+    try:
+        final_image = cv2.resize(face_roi, (img_size, img_size))
+        final_image = np.expand_dims(final_image, axis = 0)
+            
+        Predictions = model.predict(final_image)
+        class_num = np.argmax(Predictions)   # **Provides the index of the max argument
+        
+        status = classes[class_num]
+    except:
+        pass
     
-    img_pixels /= 255 #pixels are in scale of [0, 255]. normalize all pixels in scale of [0, 1]
-    
-    predictions = model.predict(img_pixels) #store probabilities of 7 expressions
-    
-    max_index = np.argmax(predictions[0])
-    status = classes[max_index]
-    
+
 def detect_face(frame):
     global fd_model, face_roi
     
@@ -81,8 +86,6 @@ def detect_face(frame):
         raise
     
     return (frame, x, y)
-
-# rt = Scheduler(0.5, predict_emotion, 0) # Call predict every x seconds
 
 @app.route('/webcam', methods = ['POST'])
 def process_image():
