@@ -32,9 +32,11 @@ def predict():
         final_image = cv2.resize(face_roi, (img_size, img_size))
         final_image = np.expand_dims(final_image, axis = 0)
             
+        print('Now predicting...')
         Predictions = model.predict(final_image)
         class_num = np.argmax(Predictions)   # **Provides the index of the max argument
         
+        print('Done predicting')
         status = classes[class_num]
     except:
         pass
