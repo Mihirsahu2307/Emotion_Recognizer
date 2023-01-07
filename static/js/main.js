@@ -1,14 +1,9 @@
 $(document).ready(function(){
-    var socket = io()
-    // var socket = io.connect(window.location.protocol + '//' + document.domain + ':' + location.port);
-    socket.on('connect', function(){
-        console.log("Connected...!", socket.connected)
-    });
-
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     const video = document.querySelector("#videoElement");
     const form = document.getElementById('my-form');
+    const but = document.getElementById('SendBtn')
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -17,6 +12,11 @@ $(document).ready(function(){
         xhr.open('POST', '/requests');
         const data = "Detect Emotion On/Off"
         xhr.send(data);
+
+        but.disabled = true;
+        setTimeout(function(){
+            but.disabled = false;
+        }, 1000);
     });
 
     video.width = 640;
@@ -28,35 +28,39 @@ $(document).ready(function(){
         .then(function (stream) {
             video.srcObject = stream;
             video.play();
-        })
-        .catch(function (err0r) {
 
+            const FPS = 4;
+            setInterval(submitFrame, 1000/FPS);
+        })
+        .catch(function (error) {
+            console.log(error)
         });
     }
 
-    const FPS = 8;
-    setInterval(() => {
+    function submitFrame(){
         width=video.width;
         height=video.height;
         context.drawImage(video, 0, 0, width , height );
 
         canvas.toBlob(function(blob) {
-            // Now, we can use the Blob object to create a FormData object
             const formData = new FormData();
             formData.append('image', blob);
           
-            // Next, we can send the FormData object to the Python server using an HTTP POST request
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/webcam', true);
-            xhr.send(formData);
-          }, 'image/jpeg', 0.7);
+            console.log('Adios')
+            fetch("/webcam", {
+                method: 'POST',
+                body: formData,
+            }).then(function(response) {
+                return response.blob();
+            }).then(function(blob) {
+                console.log('Heh, you got me!')
+                photo.src = URL.createObjectURL(blob);
+            }).catch(function(err) {
+                console.log('Fetch problem: ' + err.message);
+            });
 
-          context.clearRect(0, 0, width,height );
-    }, 1000/FPS);
+        }, 'image/jpeg', 0.7);
 
-
-    socket.on('response_back', function(image){
-            console.log('You got me!')
-            photo.setAttribute('src', image );
-    });
+        context.clearRect(0, 0, width,height );
+    }
 });

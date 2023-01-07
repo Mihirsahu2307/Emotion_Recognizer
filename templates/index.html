@@ -13,7 +13,14 @@
             font-weight: 50;
         }
 
-        h3 {
+        h2 {
+            text-align: center;
+            font-family: Helvetica;
+            color: #dcd2d9;
+            font-weight: 30;
+        }
+
+        p {
             text-align: center;
             font-family: Helvetica;
             color: #dcd2d9;
@@ -27,6 +34,9 @@
         form {
             display: inline-block;
         }
+
+        table { border-collapse: collapse; }
+        tr { border: none; }
 
         .input-form input[type="submit"]{
             border: none;
@@ -44,18 +54,26 @@
             cursor:pointer;
             background:#671458;
         }
+        
+        .input-form input[type="submit"]:disabled
+        {
+            background: #470e3d;
+            color: rgb(205, 205, 205);
+            cursor: not-allowed;
+            pointer-events: all !important;
+        }
 
-        #toggleBtn{
+        #sendBtn{
             margin: 1rem 0;
         }
 
         #photo{
             padding: 1rem;
-            outline: solid 1px #a893a5;
+            /* outline: solid 1px #a893a5; */
             display: block;
-            margin-left: auto;
+            margin-left: 2rem;
             margin-right: auto;
-            margin-top: 2rem;
+            margin-top: 1rem;
         }
 
         hr.solid{
@@ -65,6 +83,18 @@
         #videoElement {
             -webkit-transform: scaleX(-1);
             transform: scaleX(-1);
+            padding: 1rem;
+            /* outline: solid 1px #a893a5; */
+            display: block;
+            margin-left: auto;
+            margin-right: 2rem;
+            margin-top: 1rem;
+        }
+
+        #videoTable {
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 2rem;
         }
 
         #canvas {
@@ -78,42 +108,40 @@
 
     </style>
 
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-    
-     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-     <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.0/socket.io.js'></script> -->
-
-    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script> -->
-     <!-- <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/mainpage.css') }}"> -->
 </head>
 
 <body>
 
     <h1>Emotion Recognizer</h1>
-    <hr class="solid">
-
-
-    <h3 font-weight: 25>Your Webcam</h1>
-    <div id="container">
-        <video autoplay playsinline id="videoElement"></video>
-        <canvas id="canvas"  width="640" height="480"></canvas>
-    </div>
+    <!-- <p>
+        Click on "Detect Emotion On/Off" button to detect your facial emotion.
+    </p> -->
 
     <hr class="solid">
+    
 
-    <h3 font-weight: 25>Prediction</h1>
-    <div class = 'video'>
-        <img id="photo"  width="640"  height="480">
-    </div>
+    <table id="videoTable">
+        <tr>
+            <td style="border-right: solid 1px #fff"  >
+                <h2 font-weight: 25>Your webcam</h2>
+                <video autoplay playsinline id="videoElement"></video>
+            </td>
 
+            <td>
+                <h2 font-weight: 25>Prediction</h2>
+                <img id="photo"  width="640"  height="480">
+            </td>
+        </tr>
+    </table>
+    
     <div class = "input-form">
         <form method="post" id = "my-form">
-            <input type="submit" value="Detect Emotion On/Off" name="detect_emotion" id = "toggleBtn"/>
+            <input type="submit" value="Detect Emotion On/Off" name="detect_emotion" id = "SendBtn"/>
         </form>
     </div>
+
+    <canvas id="canvas"  width="640" height="480"></canvas>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
  </body>

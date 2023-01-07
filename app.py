@@ -1,25 +1,11 @@
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO
-from PIL import Image
-import base64,cv2
+from flask import Flask, render_template, request, make_response
+import cv2
 import numpy as np
-from engineio.payload import Payload
 from prediction_model import *
 
-Payload.max_decode_packets = 2048
-
-
 # Bug that took me forever to debug during deployment: Client and server side socketio versions should be compatible
-
+# Better solution: Just discard socketio completely and use javascript fetch()
 app = Flask(__name__, template_folder='./templates')
-# socketio = SocketIO(app, cors_allowed_origins='*', logger = True, engineio_logger = True)
-socketio = SocketIO(app, cors_allowed_origins='*')
-
-
-import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-
 
 global fps, prev_recv_time, face_roi, emotion_detect, fd_model, status, counter
 
@@ -32,11 +18,6 @@ prev_recv_time = 0
 emotion_detect = 0
 face_roi = np.zeros((3, 3, 3))
 status = 'neutral'
-
-@socketio.on('connect')
-def test_connect():
-    print("socket connected")
-    
     
 def predict():
     global status, face_roi, emotion_detect
@@ -87,20 +68,21 @@ def detect_face(frame):
     
     return (frame, x, y)
 
-@app.route('/webcam', methods = ['POST'])
+def send_file_data(data, mimetype='image/jpeg', filename='output.jpg'):
+    response = make_response(data)
+    response.headers.set('Content-Type', mimetype)
+    response.headers.set('Content-Disposition', 'attachment', filename=filename)
+
+    return response
+
+@app.route('/webcam', methods = ['GET', 'POST'])
 def process_image():
-    global prev_recv_time, fps_array, counter, status
+    global prev_recv_time, counter, status
     
-    # recv_time = time.time()
-    # client to server via xmlhttp
-    image = request.files['image']
-    
-    img = Image.open(image)
-    img = np.array(img)
-    frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
-    
-    frame = cv2.flip(frame,1)
+    image = request.files.get('image')
     try:
+        frame = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_UNCHANGED)
+        frame = cv2.flip(frame,1)
         frame, x, y = detect_face(frame)
         if counter == 4:
             if(emotion_detect and x > -1 and y > -1):
@@ -117,21 +99,9 @@ def process_image():
         pass
     
     
-    # server to js via socketio
-    imgencode = cv2.imencode('.jpeg', frame, [cv2.IMWRITE_JPEG_QUALITY,40])[1]
-    stringData = base64.b64encode(imgencode).decode('utf-8')
-    b64_src = 'data:image/jpeg;base64,'
-    stringData = b64_src + stringData
-    socketio.emit('response_back', stringData)
-    
-    # try:
-    #     fps = 1/(recv_time - prev_recv_time)
-    # except ZeroDivisionError as e:
-    #     pass
-    # prev_recv_time = recv_time
-    # print(int(fps))
-    
-    return render_template('index.html')
+    print('Processed 1 frame')
+    buf = cv2.imencode('.jpg', frame)[1]
+    return send_file_data(buf.tobytes())
     
 
 @app.route('/requests',methods=['POST'])
@@ -139,12 +109,15 @@ def user_input():
     if request.method == 'POST':
         global emotion_detect
         emotion_detect =not emotion_detect
+        print("Detect Emotion: ", emotion_detect)
             
     return render_template('index.html')
+
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    socketio.run(app,port=5000 ,debug=True)
+    app.run(port=5000 ,debug=True)
+
