@@ -17,7 +17,7 @@ fps=5
 prev_recv_time = 0
 emotion_detect = 0
 face_roi = np.zeros((3, 3, 3))
-status = 'neutral'
+status = 'Neutral'
     
 def predict():
     global status, face_roi, emotion_detect
@@ -26,7 +26,7 @@ def predict():
         return
     
     img_size = 224
-    classes = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
+    classes = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
     try:
         final_image = cv2.resize(face_roi, (img_size, img_size))

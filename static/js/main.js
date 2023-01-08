@@ -29,7 +29,7 @@ $(document).ready(function(){
             video.srcObject = stream;
             video.play();
 
-            const FPS = 1;
+            const FPS = 5;
             setInterval(submitFrame, 1000/FPS);
         })
         .catch(function (error) {
