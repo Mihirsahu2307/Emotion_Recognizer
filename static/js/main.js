@@ -1,4 +1,8 @@
 $(document).ready(function(){
+
+    // 2 canvas are used, one for the webcam and another for processing the prediction image
+    // reason is, the same canvas shouldn't be used in the callback of the toBlob() of the canvas (glitches)
+    
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     var canvas_op = document.getElementById('canvasOutput');
@@ -6,10 +10,11 @@ $(document).ready(function(){
     context_op.font = 'italic 25px Arial';
     context_op.fillStyle = 'white';
 
-    var gradient = context_op.createLinearGradient(0, 0, 170, 0);
+    const gradient = context_op.createLinearGradient(0, 0, 170, 0);
     gradient.addColorStop("0", "magenta");
     gradient.addColorStop("0.5" ,"blue");
     gradient.addColorStop("1.0", "red");
+    context_op.lineWidth = 2;
 
     const video = document.querySelector("#videoElement");
     const form = document.getElementById('my-form');
@@ -17,7 +22,7 @@ $(document).ready(function(){
 
     var counter = 0; // counts frames
     var detect_emotion = 0; // boolean to detect emotion
-    var status = "Neutral";
+    var status = "Neutral"; // emotion status
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -74,10 +79,12 @@ $(document).ready(function(){
                     h = _response.h;
                     status = _response.status;
 
-                    context_op.drawImage(video, 0, 0, width, height);
-                    ctx.strokeStyle = gradient;
-                    context_op.strokeRect(x, y, w, h);
-                    context_op.fillText(status, x, y);
+                    if(x > -1 && y > -1) {
+                        context_op.drawImage(video, 0, 0, width, height);
+                        ctx.strokeStyle = gradient;
+                        context_op.strokeRect(x, y, w, h);
+                        context_op.fillText(status, x, y);
+                    }
 
                     canvas_op.toBlob(function(blob_) {
                         photo.src = URL.createObjectURL(blob_);
@@ -102,14 +109,18 @@ $(document).ready(function(){
                     w = _response.w;
                     h = _response.h;
 
-                    context_op.drawImage(video, 0, 0, width, height);
-                    // for some reason context.stroke() rectangles will remain on the canvas even after clearRect is called
-                    // so replaced it with strokeRect
-                    context_op.strokeStyle = gradient;
-                    context_op.strokeRect(x, y, w, h);
 
-                    if(detect_emotion) {
-                        context_op.fillText(status, x, y);
+                    if(x > -1 && y > -1) {
+                        context_op.drawImage(video, 0, 0, width, height);
+                    
+                        // for some reason context.stroke() rectangles will remain on the canvas even after clearRect is called
+                        // so replaced it with strokeRect
+                        context_op.strokeStyle = gradient;
+                        context_op.strokeRect(x, y, w, h);
+
+                        if(detect_emotion) {
+                            context_op.fillText(status, x, y);
+                        }
                     }
 
                     canvas_op.toBlob(function(blob_) {

@@ -23,9 +23,7 @@ def predict(face_roi):
             
         print('Now predicting...')
         Predictions = model.predict(final_image)
-        class_num = np.argmax(Predictions)   # **Provides the index of the max argument
-        
-        print('Done predicting')
+        class_num = np.argmax(Predictions)
         status = classes[class_num]
     except:
         pass
@@ -41,30 +39,22 @@ def detect_face(frame):
     confidence = detections[0, 0, 0, 2] # atmost 1 face detected
 
     if confidence < 0.5:            
-        return (frame, -1, -1)           
+        return (frame, face_roi, -1, -1, -1, -1)           
 
     box = detections[0, 0, 0, 3:7] * np.array([w, h, w, h])
     (x, y, x1, y1) = box.astype("int")
     face_roi = np.zeros((3, 3, 3))
     try:
-        # dim = (h, w)
         face_roi = frame[y:y1, x:x1]
         cv2.rectangle(frame, (x, y), (x1, y1), (0, 0, 255), 2)
         (h, w) = frame.shape[:2]
         r = 480 / float(h)
         dim = ( int(w * r), 480)
         frame=cv2.resize(frame,dim)
-    except Exception as e:
+    except:
         raise
     
     return (frame, face_roi, x, y, x1, y1)
-
-def send_file_data(data, mimetype='image/jpeg', filename='output.jpg'):
-    response = make_response(data)
-    response.headers.set('Content-Type', mimetype)
-    response.headers.set('Content-Disposition', 'attachment', filename=filename)
-
-    return response
 
 @app.route('/face', methods = ['GET', 'POST'])
 def process_image1():
@@ -75,19 +65,15 @@ def process_image1():
     y1 = 0
     try:
         frame = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_UNCHANGED)
-        # frame = cv2.flip(frame,1)
         frame, _, x, y, x1, y1 = detect_face(frame)
     except:
         pass
     
-    w = x1 - x
-    h = y1 - y
-    
     response = {
         'x' : int(x), 
         'y' : int(y),
-        'w' : int(w),
-        'h' : int(h)
+        'w' : int(x1 - x),
+        'h' : int(y1 - y)
     }
     return response
 
@@ -101,21 +87,17 @@ def process_image2():
     status = 'Neutral'
     try:
         frame = cv2.imdecode(np.frombuffer(image.read(), np.uint8), cv2.IMREAD_UNCHANGED)
-        # frame = cv2.flip(frame,1)
         frame, face_roi, x, y, x1, y1 = detect_face(frame)
-        status = predict(face_roi)
-        # cv2.putText(frame, status, (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+        if x > -1 and y > -1:
+            status = predict(face_roi)
     except:
         pass
-    
-    w = x1 - x
-    h = y1 - y
-    
+
     response = {
         'x' : int(x), 
         'y' : int(y),
-        'w' : int(w),
-        'h' : int(h),
+        'w' : int(x1 - x),
+        'h' : int(y1 - y),
         'status' : status
     }
     return response
