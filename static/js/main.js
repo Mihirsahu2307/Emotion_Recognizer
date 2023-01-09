@@ -1,17 +1,27 @@
 $(document).ready(function(){
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
+    var canvas_op = document.getElementById('canvasOutput');
+    var context_op = canvas_op.getContext('2d');
+    context_op.font = 'italic 25px Arial';
+    context_op.fillStyle = 'white';
+
+    var gradient = context_op.createLinearGradient(0, 0, 170, 0);
+    gradient.addColorStop("0", "magenta");
+    gradient.addColorStop("0.5" ,"blue");
+    gradient.addColorStop("1.0", "red");
+
     const video = document.querySelector("#videoElement");
     const form = document.getElementById('my-form');
     const but = document.getElementById('SendBtn')
 
+    var counter = 0; // counts frames
+    var detect_emotion = 0; // boolean to detect emotion
+    var status = "Neutral";
+
     form.addEventListener('submit', function(event) {
         event.preventDefault();
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/requests');
-        const data = "Detect Emotion On/Off"
-        xhr.send(data);
+        detect_emotion = 1 - detect_emotion;
 
         but.disabled = true;
         setTimeout(function(){
@@ -29,7 +39,7 @@ $(document).ready(function(){
             video.srcObject = stream;
             video.play();
 
-            const FPS = 5;
+            const FPS = 8;
             setInterval(submitFrame, 1000/FPS);
         })
         .catch(function (error) {
@@ -45,20 +55,76 @@ $(document).ready(function(){
         canvas.toBlob(function(blob) {
             const formData = new FormData();
             formData.append('image', blob);
-          
-            console.log('Adios')
-            fetch("/webcam", {
-                method: 'POST',
-                body: formData,
-            }).then(function(response) {
-                return response.blob();
-            }).then(function(blob) {
-                console.log('Heh, you got me!')
-                photo.src = URL.createObjectURL(blob);
-            }).catch(function(err) {
-                console.log('Fetch problem: ' + err.message);
-            });
 
+            counter = counter + 1;
+            console.log('Adios')
+
+            if(detect_emotion && counter == 3) {
+                fetch("/emotion", {
+                    method: 'POST',
+                    body: formData,
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(_response) {
+                    console.log('Heh, you got me!')
+
+                    x = _response.x;
+                    y = _response.y;
+                    w = _response.w;
+                    h = _response.h;
+                    status = _response.status;
+
+                    context_op.drawImage(video, 0, 0, width, height);
+                    ctx.strokeStyle = gradient;
+                    context_op.strokeRect(x, y, w, h);
+                    context_op.fillText(status, x, y);
+
+                    canvas_op.toBlob(function(blob_) {
+                        photo.src = URL.createObjectURL(blob_);
+                    });
+
+                    context_op.clearRect(0, 0, width, height);
+                }).catch(function(err) {
+                    console.log('Fetch problem: ' + err.message);
+                });
+                counter = 0;
+            }
+            else {
+                fetch("/face", {
+                    method: 'POST',
+                    body: formData,
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(_response) {
+                    console.log('Heh, you got me!')
+                    x = _response.x;
+                    y = _response.y;
+                    w = _response.w;
+                    h = _response.h;
+
+                    context_op.drawImage(video, 0, 0, width, height);
+                    // for some reason context.stroke() rectangles will remain on the canvas even after clearRect is called
+                    // so replaced it with strokeRect
+                    context_op.strokeStyle = gradient;
+                    context_op.strokeRect(x, y, w, h);
+
+                    if(detect_emotion) {
+                        context_op.fillText(status, x, y);
+                    }
+
+                    canvas_op.toBlob(function(blob_) {
+                        photo.src = URL.createObjectURL(blob_);
+                    });
+
+                    context_op.clearRect(0, 0, width, height);
+                }).catch(function(err) {
+                    console.log('Fetch problem: ' + err.message);
+                });
+            }
+
+            if(counter == 3) {
+                counter = 0;
+            }
         }, 'image/jpeg', 0.7);
 
         context.clearRect(0, 0, width,height );
