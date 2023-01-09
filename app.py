@@ -37,13 +37,13 @@ def detect_face(frame):
     fd_model.setInput(blob)
     detections = fd_model.forward()
     confidence = detections[0, 0, 0, 2] # atmost 1 face detected
-
+    face_roi = np.zeros((3, 3, 3))
+    
     if confidence < 0.5:            
         return (frame, face_roi, -1, -1, -1, -1)           
 
     box = detections[0, 0, 0, 3:7] * np.array([w, h, w, h])
     (x, y, x1, y1) = box.astype("int")
-    face_roi = np.zeros((3, 3, 3))
     try:
         face_roi = frame[y:y1, x:x1]
         cv2.rectangle(frame, (x, y), (x1, y1), (0, 0, 255), 2)
