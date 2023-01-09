@@ -20,11 +20,14 @@ python app.py
 
 
 ## Improvements
-* Tried using socket programming by passing webcam frames obtained via javascript to server. But the latency is high, so alternative approaches are:
 
-1) Build a chrome extension that clients need to download first; then all the predictions can be done on client side. 
+One major improvement was made by shifting some of the image processing steps to the client side. Adding rectangle and text to the image is now done on the client's browser. The advantage is now the server doesn't need to those minor processing steps and it also doesn't need to send the processed image back to client. Instead a json object is passed containing coordinates and emotion status. This significantly improves the frame rate and the quality of the prediction image on client's browser.
+
+Further improvements can be made by:
+
+1) Building a chrome extension that clients need to download first; then all the predictions can be done on client side. 
 (Not preferred, because then there would be no need of python and users would also have to install an extra extension)
 
-2) Use webRTC to achieve low latency frame transfer to and from server; aiortc is a useful library. However with that approach, flask would have to be discarded.
+2) Using webRTC to achieve low latency frame transfer to server; aiortc is a useful library. However with that approach, flask would have to be discarded.
 
 3) Deployment of webapps that use tensorflow as backend with keras is a real pain. I managed to make it work on pythonanywhere, but maybe another hosting service would serve better, or perhaps there could be a better way to deploy.
