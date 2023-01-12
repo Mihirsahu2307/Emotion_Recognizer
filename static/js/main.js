@@ -78,9 +78,8 @@ $(document).ready(function(){
                     w = _response.w;
                     h = _response.h;
                     status = _response.status;
-
+                    context_op.drawImage(video, 0, 0, width, height);
                     if(x > -1 && y > -1) {
-                        context_op.drawImage(video, 0, 0, width, height);
                         ctx.strokeStyle = gradient;
                         context_op.strokeRect(x, y, w, h);
                         context_op.fillText(status, x, y);
@@ -109,10 +108,8 @@ $(document).ready(function(){
                     w = _response.w;
                     h = _response.h;
 
-
+                    context_op.drawImage(video, 0, 0, width, height);
                     if(x > -1 && y > -1) {
-                        context_op.drawImage(video, 0, 0, width, height);
-                    
                         // for some reason context.stroke() rectangles will remain on the canvas even after clearRect is called
                         // so replaced it with strokeRect
                         context_op.strokeStyle = gradient;
