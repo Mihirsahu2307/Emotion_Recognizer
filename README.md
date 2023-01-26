@@ -31,3 +31,8 @@ Further improvements can be made by:
 2) Using webRTC to achieve low latency frame transfer to server; aiortc is a useful library. However with that approach, flask would have to be discarded.
 
 3) Deployment of webapps that use tensorflow as backend with keras is a real pain. I managed to make it work on pythonanywhere, but maybe another hosting service would serve better, or perhaps there could be a better way to deploy.
+
+
+## TODO
+
+1) Deploy the model as an api endpoint on some cloud platform and call the model using javascript from the webapp code. [YT](https://www.youtube.com/results?search_query=deploy+ml+model+as+api+on+cloud) (Deploy the ml model and host the webapp separately). Can also look into the aiortc approach, as flask would be needed for the api endpoint anyway.
