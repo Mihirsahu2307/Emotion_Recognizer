@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emotion_Recognizer</title>
+
+    <style>
+        h1 {
+            text-align: center;
+            font-family: Helvetica;
+            color: #dcd2d9;
+            font-weight: 50;
+        }
+
+        h2 {
+            text-align: center;
+            font-family: Helvetica;
+            color: #dcd2d9;
+            font-weight: 30;
+        }
+
+        p {
+            text-align: center;
+            font-family: Helvetica;
+            color: #dcd2d9;
+            font-weight: 30;
+        }
+
+        body{
+            text-align: center;
+            background-color: #2e2e31;
+        }
+        form {
+            display: inline-block;
+        }
+
+        table { border-collapse: collapse; }
+        tr { border: none; }
+
+        .input-form input[type="submit"]{
+            border: none;
+            outline:none;
+            height:40px;
+            width: auto;
+            margin: 1rem 0;
+            background:#60447A;
+            color: #fff;
+            font-size:18px;
+            border-radius:5px;
+            transition:.3s background ease;
+        }
+        .input-form input[type="submit"]:hover{
+            cursor:pointer;
+            background:#671458;
+        }
+        
+        .input-form input[type="submit"]:disabled
+        {
+            background: #470e3d;
+            color: rgb(205, 205, 205);
+            cursor: not-allowed;
+            pointer-events: all !important;
+        }
+
+        .can {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            width: 800px;
+        }
+
+        #sendBtn{
+            margin: 1rem 0;
+        }
+
+        #photo{
+            /* -webkit-transform: scaleX(-1);
+            transform: scaleX(-1); */
+            padding: 1rem;
+            /* outline: solid 1px #a893a5; */
+            display: block;
+            margin-left: 2rem;
+            margin-right: auto;
+            margin-top: 1rem;
+        }
+
+        hr.solid{
+            color: #5b1f50;
+        }
+
+        #videoElement {
+            /* -webkit-transform: scaleX(-1);
+            transform: scaleX(-1); */
+            padding: 1rem;
+            /* outline: solid 1px #a893a5; */
+            display: block;
+            margin-left: auto;
+            margin-right: 2rem;
+            margin-top: 1rem;
+        }
+
+        #videoTable {
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 2rem;
+        }
+
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+    <h1>Emotion Recognizer</h1>
+    <!-- <p>
+        Click on "Detect Emotion On/Off" button to detect your facial emotion.
+    </p> -->
+
+    <hr class="solid">
+    
+
+    <table id="videoTable">
+        <tr>
+            <td style="border-right: solid 1px #fff"  >
+                <h2 font-weight: 25>Your webcam</h2>
+                <video autoplay playsinline id="videoElement"></video>
+            </td>
+
+            <td>
+                <h2 font-weight: 25>Prediction</h2>
+                <img id="photo"  width="640"  height="480">
+            </td>
+        </tr>
+    </table>
+    
+    <div class = "input-form">
+        <form method="post" id = "my-form">
+            <input type="submit" value="Detect Emotion On/Off" name="detect_emotion" id = "SendBtn"/>
+        </form>
+    </div>
+
+    <canvas id="canvas" class="can"  width="640" height="480"></canvas>
+    <canvas id="canvasOutput" class="can"  width="640" height="480"></canvas>
+
+    <h2>You seem lost... what you seek is within.</h2>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+ </body>
+
+</html>
+

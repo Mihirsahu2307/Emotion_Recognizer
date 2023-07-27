@@ -2,7 +2,7 @@
 This project is a continuation of my [previous work](https://github.com/Mihirsahu2307/Facial_Emotion_Recognition) where the prediction model was built and trained.
 Here, the primiary focus is to deploy the model and develop a website that can serve multiple clients and provide them low latency real time predictions from their webcam.
 
-Demo: [website](http://mihirsahu2307.pythonanywhere.com)
+Demo: [website](https://emotion-recognizer.site)
 
 ## How to use locally:
 
