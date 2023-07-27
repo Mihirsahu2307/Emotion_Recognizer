@@ -1,23 +1,29 @@
 # Emotion_Recognizer
 This project is a continuation of my [previous work](https://github.com/Mihirsahu2307/Facial_Emotion_Recognition) where the prediction model was built and trained.
-Here, the primiary focus is to deploy the model and develop a website that can serve multiple clients and provide them low latency real time predictions from their webcam.
+Here, the primiary focus is to deploy and scale the model to serve multiple clients and provide them low latency real time predictions from their webcam.
 
 Demo: [website](https://emotion-recognizer.site)
 
 ## How to use locally:
 
-* Clone the repo and install the requirements:
+* Manual set up:
+    * Clone the repo and install the requirements:
+
+    ```
+    pip install -r requirements.txt
+    ```
+
+    * Run the app using the command:
+
+    ```
+    python app.py
+    ```
+
+* For scaling with docker, use:
 
 ```
-pip install -r requirements.txt
+docker-compose up --scale app=3
 ```
-
-* Run the app using the command:
-
-```
-python app.py
-```
-
 
 ## Improvements
 
@@ -28,9 +34,7 @@ python app.py
 
 Further improvements can be made by:
 
-0) Right now, the bottleneck seems to be on the frontend, where rectangles are drawn over the canvas. The server can apparently handle more FPS but the rectangles are not drawn fast enough.
-
-1) Using webRTC to achieve low latency frame transfer to server; aiortc is a useful library.
+1) Using webRTC to achieve low latency frame transfer to server; aiortc is a useful library. That will make the API non-restful but it should work much faster.
 
 2) ~~Deployment of webapps that use tensorflow as backend with keras is a real pain. I managed to make it work on pythonanywhere, but maybe another hosting service would serve better, or perhaps there could be a better way to deploy.~~
 
